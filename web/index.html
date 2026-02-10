@@ -1176,6 +1176,11 @@
                             <option value="">-- Select faction first --</option>
                         </select>
                         <div id="roleIdeologyDesc" class="ideology-description"></div>
+                        <div class="form-group" style="margin-top: 8px;">
+                            <label for="roleDescription">Role Description</label>
+                            <input type="text" id="roleDescription" placeholder="e.g. Farmer, Merchant, Scientist..." disabled>
+                            <div id="roleExamples" class="ideology-description" style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;"></div>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -1297,6 +1302,19 @@
             'Decentralisation', 'Economy', 'Growth', 'Industry', 'Military',
             'Morale', 'Planet', 'Police', 'Probe', 'Research'
         ];
+        
+        const ROLE_EXAMPLES = {
+            'Decentralisation': 'Administrator, Base Commander, Bureaucrat, Coordinator, Diplomat',
+            'Economy': 'Advertiser, CEO/Business Leader, Lawyer, Media Broadcaster, Merchant, Thief',
+            'Growth': 'Community Leader, Doctor, Farmer, Logistics Coordinator, Rancher, Terraformer',
+            'Industry': 'Builder, Engineer, Inventor, Manufacturer, Miner, Roboticist',
+            'Military': 'Base Commander, Mercenary, Military Command, Quartermaster, Scout, Soldier',
+            'Morale': 'Community Leader, Counsellor, Drill Sergeant, Entertainer, Preacher, Rabble Rouser',
+            'Planet': 'Explorer, Farmer, Forager, Mariner, Mystic, Xenobotanist',
+            'Police': 'Bodyguard, Interrogator, Investigator, Law Enforcement Officer, Martial Artist, Pickpocket',
+            'Probe': 'Agent, Cybersecurity Expert, Digital Surveillance Operative, Hacker, Propagandist, Saboteur, Software Developer',
+            'Research': 'Academic, Archivist, Inventor, Lab Tech, Researcher, Scientist, Teacher'
+        };
         
         const FACTIONS = {
             believers: {
@@ -1422,14 +1440,14 @@
                 'Ally': 'An ally supports one downtime action per cycle for a specific ideology you hold.',
                 'Delegate': 'Support two additional facilities per level beyond standard.',
                 'Facilitation': 'Counter sabotage with redraws. Support third-party meetings.',
-                'Leadership': 'Lead military teams or coordinate bases. Allows Base Commander role.',
+                'Leadership': 'Lead military teams or coordinate bases. Allows Base Commander role. Each level above the first increases morale of commanded units by 1.',
                 'Influence': 'Change group policy or gain reputation. More rep = higher success.',
                 'Support': 'Grant one card to another for their next appropriate check.'
             },
             Economy: {
                 'Broadcast': 'Send info widely. Advertise, implement technology, spread rumours.',
                 'Contract Law': 'Create or analyse binding agreements with solid legal clauses.',
-                'Energy': '2 energy goods at session start. Can be traded.',
+                'Energy': '2 energy goods at session start (+1 per additional level). Can be traded.',
                 'Larceny': 'Break locks, take items, make fraudulent deals.',
                 'Invest': 'Turn a resource into two for downtime.',
                 'Management': 'Support two additional facilities per level.',
@@ -1440,7 +1458,7 @@
                 'Community': 'Community supports one downtime action for a specific ideology.',
                 'Expand': 'Lead a team to set up or expand a base.',
                 'Medicine': 'Recover injuries or save from dying with skill check.',
-                'Nutrients': '2 nutrient goods at session start. Can be traded.',
+                'Nutrients': '2 nutrient goods at session start (+1 per additional level). Can be traded.',
                 'Survey': 'Examine terrain for features and base suitability.',
                 'Terraform': 'Team that makes land suitable, enhancing sites or yield.'
             },
@@ -1449,14 +1467,14 @@
                 'Craft': 'Create or upgrade equipment with appropriate goods.',
                 'Exploit': 'Extract all resources from surveyed area.',
                 'Factory': 'Workshops to turn minerals into goods or upgrade units.',
-                'Minerals': '2 mineral goods at session start. Can be traded.',
+                'Minerals': '2 mineral goods at session start (+1 per additional level). Can be traded.',
                 'Prototype': 'Test new tech in field. Create experimental equipment.',
                 'Repair': 'Fix damaged systems, infrastructure, or facilities.'
             },
             Military: {
                 'Armour': '(Equipment) Ignore 1 damage in dramatic scene. Needs upgrading.',
                 'Athletics': 'Feats of strength or agility.',
-                'Command': 'Lead military teams. Allows Base Commander role.',
+                'Command': 'Lead military teams. Allows Base Commander role. Each level above the first increases morale of commanded units by 1.',
                 'Defend': 'Defend infrastructure/base in downtime, cover in session.',
                 'Exterminate': 'Combat checks fighting enemies. Enhanced by weapons.',
                 'Scout': 'Lead group into territory to find what\'s present.',
@@ -1474,7 +1492,7 @@
             Planet: {
                 'Dream': 'Communicate in dreams. Enter trance for direct contact.',
                 'Explore': 'Lead group into territory to find what\'s present.',
-                'Farm': '2 nutrient goods at session start. Can be traded.',
+                'Farm': '2 nutrient goods at session start (+1 per additional level). Can be traded.',
                 'Haven': 'Secluded serenity area. Enhances dreams, lowers tolls.',
                 'Seafaring': 'Lead team over water. Grants small naval vessel.',
                 'Xenobiology': 'Understanding native life helps travel and study.',
@@ -1608,6 +1626,7 @@
             faction: '',
             factionIdeology: '',
             roleIdeology: '',
+            roleDescription: '',
             beliefIdeology: '',
             aversionIdeology: '',
             secondBeliefIdeology: '',
@@ -2904,6 +2923,26 @@
             const roleIdeology = document.getElementById('roleIdeology').value;
             state.roleIdeology = roleIdeology;
             showIdeologyDesc('roleIdeologyDesc', roleIdeology);
+            
+            // Update role description field
+            const roleDescInput = document.getElementById('roleDescription');
+            const roleExamplesEl = document.getElementById('roleExamples');
+            if (roleIdeology) {
+                roleDescInput.disabled = false;
+                roleDescInput.placeholder = ROLE_EXAMPLES[roleIdeology] || 'Describe your role...';
+                if (roleExamplesEl) {
+                    roleExamplesEl.textContent = 'Examples: ' + (ROLE_EXAMPLES[roleIdeology] || '');
+                    roleExamplesEl.style.display = '';
+                }
+            } else {
+                roleDescInput.disabled = true;
+                roleDescInput.value = '';
+                state.roleDescription = '';
+                if (roleExamplesEl) {
+                    roleExamplesEl.textContent = '';
+                    roleExamplesEl.style.display = 'none';
+                }
+            }
             
             if (!roleIdeology) {
                 select.disabled = true;
@@ -4226,10 +4265,10 @@
                 income -= 2;
             }
             
-            // Energy proficiency adds +2 income per instance
+            // Energy proficiency adds +2 for first level, +1 for each additional
             // Note: Energy Savings grants an Energy proficiency, so it's already counted here
             const energyCount = state.proficiencies.filter(p => p.name === 'Energy').length;
-            income += energyCount * 2;
+            if (energyCount > 0) income += 2 + (energyCount - 1);
             
             return Math.max(0, income); // Can't go below 0
         }
@@ -4237,14 +4276,14 @@
         function getNutrientIncome() {
             let income = 0;
             
-            // Nutrients proficiency adds +2 per instance
+            // Nutrients proficiency adds +2 for first level, +1 for each additional
             // Note: Hydroponics Bay grants a Nutrients proficiency, so it's already counted here
             const nutrientCount = state.proficiencies.filter(p => p.name === 'Nutrients').length;
-            income += nutrientCount * 2;
+            if (nutrientCount > 0) income += 2 + (nutrientCount - 1);
             
-            // Farm proficiency also grants nutrients
+            // Farm proficiency also grants nutrients: +2 for first level, +1 for each additional
             const farmCount = state.proficiencies.filter(p => p.name === 'Farm').length;
-            income += farmCount * 2;
+            if (farmCount > 0) income += 2 + (farmCount - 1);
             
             return income;
         }
@@ -4252,10 +4291,10 @@
         function getMineralIncome() {
             let income = 0;
             
-            // Minerals proficiency adds +2 per instance
+            // Minerals proficiency adds +2 for first level, +1 for each additional
             // Note: Rich Ore Seam grants a Minerals proficiency, so it's already counted here
             const mineralCount = state.proficiencies.filter(p => p.name === 'Minerals').length;
-            income += mineralCount * 2;
+            if (mineralCount > 0) income += 2 + (mineralCount - 1);
             
             return income;
         }
@@ -4514,7 +4553,7 @@
                     </div>
                     <div class="summary-item">
                         <h4>Ideologies</h4>
-                        <div>F: ${state.factionIdeology || '-'}<br>R: ${state.roleIdeology || '-'}<br>B: ${state.beliefIdeology || '-'}<br>A: ${state.aversionIdeology || '-'}</div>
+                        <div>F: ${state.factionIdeology || '-'}<br>R: ${state.roleIdeology || '-'}${state.roleDescription ? ' (' + state.roleDescription + ')' : ''}<br>B: ${state.beliefIdeology || '-'}<br>A: ${state.aversionIdeology || '-'}</div>
                     </div>
                     <div class="summary-item">
                         <h4>Proficiencies (${state.proficiencies.length}/${getMaxProficiencies()})</h4>
@@ -4598,6 +4637,7 @@
             
             state.name = document.getElementById('charName').value;
             state.concept = document.getElementById('charConcept').value;
+            state.roleDescription = document.getElementById('roleDescription').value;
             
             const faction = FACTIONS[state.faction];
             const bonusProfs = getFactionBonusProficiencies();
@@ -4632,6 +4672,7 @@
                 character: {
                     name: state.name,
                     concept: state.concept,
+                    roleDescription: state.roleDescription,
                     faction: {
                         key: state.faction,
                         name: faction.name,
@@ -4643,6 +4684,7 @@
                         factionDefault: faction.dominant,
                         factionRebel: state.factionIdeology !== faction.dominant,
                         role: state.roleIdeology,
+                        roleDescription: state.roleDescription,
                         belief: state.beliefIdeology,
                         aversion: state.aversionIdeology,
                         secondBelief: state.secondBeliefIdeology || null,
@@ -4740,6 +4782,7 @@
         function exportPDF() {
             // Update state from form before export
             state.concept = document.getElementById('charConcept').value;
+            state.roleDescription = document.getElementById('roleDescription').value;
             
             if (!validate()) return;
             
@@ -4928,7 +4971,8 @@
             doc.setTextColor(...colors.textLight);
             doc.text('Role:', ideoX, y + 7);
             ideoX += 10;
-            ideoX += drawPill(ideoX, ideoY, state.roleIdeology || '-', colors.pillBg, colors.primary, colors.primary);
+            const roleLabel = state.roleDescription ? `${state.roleIdeology} (${state.roleDescription})` : (state.roleIdeology || '-');
+            ideoX += drawPill(ideoX, ideoY, roleLabel, colors.pillBg, colors.primary, colors.primary);
             ideoX += 2;
             
             // Belief ideology
@@ -5470,6 +5514,7 @@
             document.getElementById('charName').value = char.name || '';
             document.getElementById('charConcept').value = char.concept || '';
             state.concept = char.concept || '';
+            state.roleDescription = char.roleDescription || (char.ideologies && char.ideologies.roleDescription) || '';
             updateConceptCounter();
             
             // Load advantages and drawbacks first (needed for Faction Rebel)
@@ -5565,6 +5610,7 @@
             
             document.getElementById('roleIdeology').value = char.ideologies.role;
             updateBeliefOptions();
+            document.getElementById('roleDescription').value = state.roleDescription;
             
             document.getElementById('beliefIdeology').value = char.ideologies.belief;
             updateAversionOptions();
@@ -5625,6 +5671,7 @@
             state.faction = '';
             state.factionIdeology = '';
             state.roleIdeology = '';
+            state.roleDescription = '';
             state.beliefIdeology = '';
             state.aversionIdeology = '';
             state.secondBeliefIdeology = '';
@@ -5644,6 +5691,10 @@
             updateConceptCounter();
             document.getElementById('faction').value = '';
             document.getElementById('roleIdeology').value = '';
+            document.getElementById('roleDescription').value = '';
+            document.getElementById('roleDescription').disabled = true;
+            const roleExamplesEl = document.getElementById('roleExamples');
+            if (roleExamplesEl) { roleExamplesEl.textContent = ''; roleExamplesEl.style.display = 'none'; }
             document.getElementById('beliefIdeology').value = '';
             document.getElementById('aversionIdeology').value = '';
             
@@ -5687,6 +5738,9 @@
         document.getElementById('charConcept')?.addEventListener('input', () => {
             state.concept = document.getElementById('charConcept').value;
             updateConceptCounter();
+        });
+        document.getElementById('roleDescription')?.addEventListener('input', () => {
+            state.roleDescription = document.getElementById('roleDescription').value;
         });
         
         function updateConceptCounter() {
